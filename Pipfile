@@ -8,6 +8,7 @@ open3d = "*"
 argparse = "*"
 numpy = "*"
 matplotlib = "*"
+scipy = "*"
 
 [dev-packages]
 
