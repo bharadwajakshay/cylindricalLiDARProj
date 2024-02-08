@@ -31,7 +31,7 @@ def range_projection(current_vertex, fov_up=3.0, fov_down=-24.8, proj_H=64, proj
   pitch = np.arcsin(scan_z / depth)
   
   # get projections in image coords
-  proj_x = 0.5 * ((yaw / np.pi) + 1.0)  # in [0.0, 1.0]
+  proj_x = 0.5 * (yaw / np.pi + 1.0)  # in [0.0, 1.0]
   proj_y = 1.0 - (pitch + abs(fov_down)) / fov  # in [0.0, 1.0]
   
   # scale to image size using angular resolution
