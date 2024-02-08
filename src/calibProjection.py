@@ -8,6 +8,7 @@ from numpy import matlib
 from matplotlib import pyplot as plt
 import PIL
 import open3d as o3d
+from scipy.spatial.transform import Rotation as R
 
 from cylindericalProjectionLiDAR import range_projection
 
@@ -54,20 +55,15 @@ def getSynthesisedTransform(angleLimit, translationLimit):
     #tr_x = translationLimit*np.random.random_sample() - (translationLimit/2.0)
     #tr_y = translationLimit*np.random.random_sample() - (translationLimit/2.0)
     #tr_z = translationLimit*np.random.random_sample() - (translationLimit/2.0).
+    
     [omega_x, omega_y, omega_z]  = np.random.uniform(low=-1*angleLimit, high=angleLimit, size=3)
     [tr_x, tr_y, tr_z] = np.random.uniform(low=-1*translationLimit, high=translationLimit, size=3)
 
-    theta = np.sqrt(omega_x**2 + omega_y**2 + omega_z**2)
-    omega_cross = np.array([0.0, -omega_z, omega_y, omega_z, 0.0, -omega_x, -omega_y, omega_x, 0.0]).reshape(3,3)
-
-    A = np.sin(theta)/theta
-    B = (1.0 - np.cos(theta))/(theta**2)
-
-    R = np.eye(3,3) + A*omega_cross + B*np.matmul(omega_cross, omega_cross)
+    rot= R.from_euler('zxy', [omega_x, omega_y, omega_z],degrees= False)
 
     T = np.array([tr_x, tr_y, tr_z]).reshape(3,1)
 
-    random_transform = np.vstack((np.hstack((R, T)), np.array([[0.0, 0.0, 0.0, 1.0]])))
+    random_transform = np.vstack((np.hstack((rot.as_matrix(), T)), np.array([[0.0, 0.0, 0.0, 1.0]])))
 
     return(random_transform)
 
@@ -227,13 +223,27 @@ def applyTransformation(points, tranformation):
 
     assert tranformation.shape[0] == 4
     assert tranformation.shape[1] == 4
-    assert points.shape[0] == 3
-
+    if len(points.shape) == 2:
+        assert points.shape[0] == 3
+        organizedPtCld = False
+    elif len(points.shape) == 3:
+        assert points.shape[-1] == 3
+        organizedPtCld = True
+    else:
+        exit(-1)
+    
+    if organizedPtCld:
+        initalShape = points.shape
+        points = points.reshape([-1,initalShape[-1]]).T
+        
     points = np.dot(tranformation[:3,:3], points)
 
     for i in range(3):
         points[i,:] = points[i,:] + tranformation [i,3]
 
+    if organizedPtCld:
+        points = points.T.reshape(initalShape)
+    
     return points
 
 def getInverseOfTransfrom(tranfromation):
