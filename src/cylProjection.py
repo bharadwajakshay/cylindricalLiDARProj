@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 from odomDataGen import createOdomData
+from calibrationDataGen import createCalibdata
 
 def addParser():
     # Add parser arguements
@@ -49,6 +50,16 @@ def processForCalib(args):
     if not(os.path.exists(args.src)):
         print("Creating a dataset failed")
         exit(-1)
+    if not(os.path.exists(args.dst)):
+        try:
+            os.makedirs(args.dst)
+        except ValueError:
+            print(f'Unable to create the destination directory,{ValueError}')
+            exit(-1)
+            
+    retStatus = createCalibdata(args)
+    if retStatus == -1:
+        print()
     
 
 def main():
