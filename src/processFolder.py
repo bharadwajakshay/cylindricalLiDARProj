@@ -108,7 +108,7 @@ def createDataFromEachDir(args, src, dir):
         # create a placeholder for the generated data
         projectedImg = np.zeros(shape=[64,900,3],dtype=float)
         # generate random transform 
-        randomTransform = getSynthesisedTransform(np.deg2rad(args.anglim),args.translim)
+        randomTransform = getSynthesisedTransform(np.deg2rad(float(args.anglim)),float(args.translim))
         distortedPoints = applyTransformation(correctedPtCld, randomTransform)
         
 
@@ -121,14 +121,14 @@ def createDataFromEachDir(args, src, dir):
         normals [negIdx[0],negIdx[1],:] = 0 
         
         projectedImg[:,:,:3] = distortedPoints
-        projectedImgGT = np.concatenate((projectedImgGT,np.expand_dims(projIntensityGT,axis=2)),axis=2)
+        projectedImg = np.concatenate((projectedImg,np.expand_dims(projIntensityGT,axis=2)),axis=2)
         if args.normals:
-            projectedImgGT = np.concatenate((projectedImgGT,normals),axis=2)
+            projectedImg = np.concatenate((projectedImg,normals),axis=2)
         if args.mask:
-            projectedImgGT = np.concatenate((projectedImgGT,np.expand_dims(projMask,axis=2)),axis=2)
+            projectedImg = np.concatenate((projectedImg,np.expand_dims(projMask,axis=2)),axis=2)
         if args.rangeimg:
             rangeImg = np.linalg.norm(projectedImg[:,:,:3], 2, axis=2)
-            projectedImgGT = np.concatenate((projectedImgGT,np.expand_dims(rangeImg,axis=2)),axis=2)
+            projectedImg = np.concatenate((projectedImg,np.expand_dims(rangeImg,axis=2)),axis=2)
         
         if _debug:
             calculatedRangedist = np.linalg.norm(projectedImg[:,:,:3], 2, axis=2)
