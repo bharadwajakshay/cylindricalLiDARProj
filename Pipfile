@@ -10,6 +10,7 @@ numpy = "*"
 matplotlib = "*"
 scipy = "*"
 tqdm = "*"
+nuscenes-devkit = "*"
 
 [dev-packages]
 

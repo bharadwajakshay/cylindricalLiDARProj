@@ -23,7 +23,7 @@ def addParser():
     parser.add_argument('-s','--src', type= str, help='Add the path to the source directory of the dataset', required=True)
     parser.add_argument('-e','--dataset', type= str, help='Choose the dataset you are working with', required=True)
     parser.add_argument('-d','--dst', type= str, help='Add the path to the destination directory of the dataset', required=True)
-    parser.add_argument('-k','--calibDir', type=str, help='Add the path to the calibration directory where all calibration files stay', required=True)
+    parser.add_argument('-k','--calibDir', type=str, help='Add the path to the calibration directory where all calibration files stay', required=False)
     parser.add_argument('-a','--anglim', help='Enter the angle value in degrees to unclaibrate the lidar', required=False)
     parser.add_argument('-l','--translim', help='Enter the translation value in meters to unclaibrate the lidar', required=False)
     parser.add_argument('-c','--clrinfo', help='Enter the translation value in meters to unclaibrate the lidar', required=False)
