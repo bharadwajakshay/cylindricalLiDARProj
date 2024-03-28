@@ -9,6 +9,7 @@ from calibProjection import getSynthesisedTransform
 from tqdm import tqdm
 
 _debug = False
+_dispAlignedImg = True
 
 def createDataFromEachDir(args, src, dir):
     filepaths = []
@@ -17,6 +18,7 @@ def createDataFromEachDir(args, src, dir):
     calibFileProj = os.path.join(src, dir, 'calib.txt')
     # Read the calibration data from calibration file. Only Left Image
     projMatLeftImg = readOdomProjectionMat(calibFileProj,'2')
+    projMatRighImg = readOdomProjectionMat(calibFileProj,'3')
     projMatTr = readOdomTR(calibFileProj)
     Tr = np.eye(4)
     Tr[:3,:4] = projMatTr
@@ -138,6 +140,7 @@ def createDataFromEachDir(args, src, dir):
             pixel_Movement_aligned_vs_distorted = np.linalg.norm(projectedImg[:,:,:3] - projectedImgGT[:,:,:3], 2, axis=2)
             #pixel_Movement_aligned_vs_distorted = pixel_Movement_aligned_vs_distorted *(255/pixel_Movement_aligned_vs_distorted.max())
             Image.fromarray(pixel_Movement_aligned_vs_distorted.astype(np.uint8),'L').save('pixel_Movement_aligned_vs_distorted.png')
+
         
         # Now write the projected file 
         dstFileName = os.path.join(dstFolder, '.'.join([filenameIdx,'bin']))
@@ -146,12 +149,14 @@ def createDataFromEachDir(args, src, dir):
         
         
         ################################################### Add data #################################################################
-        dataEntry['imageFP'] = leftImgPth
+        dataEntry['leftImageFP'] = leftImgPth
+        dataEntry['rightImageFP'] = rghtImgPth
         dataEntry['LiDARImgShape'] = projectedImg.shape
         dataEntry['deCalibDataFP'] = dstFileName
         dataEntry['groundTruthDataFP'] = dstFileNameGT
         dataEntry['transformationMat'] = randomTransform.tolist()
-        dataEntry['projectionMat'] = projMatLeftImg.tolist()
+        dataEntry['leftProjMat'] = projMatLeftImg.tolist()
+        dataEntry['rightProjMat'] = projMatRighImg.tolist()
         filepaths.append(dataEntry)
     
     return(filepaths)
