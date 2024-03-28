@@ -9,6 +9,7 @@ argparse = "*"
 numpy = "*"
 matplotlib = "*"
 scipy = "*"
+tqdm = "*"
 
 [dev-packages]
 
