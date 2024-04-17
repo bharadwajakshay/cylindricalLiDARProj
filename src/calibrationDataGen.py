@@ -46,7 +46,7 @@ def createCalibdata(args):
             print("Failed to find the data. is there source directory correct??")
             return(-1)
         
-        nuscenes = NuScenes(version='v1.0-mini', dataroot=args.src, verbose=True)
+        nuscenes = NuScenes(version='v1.0-trainval', dataroot=args.src, verbose=True)
 
         files = Parallel(n_jobs=1)(delayed(createDataFromEachDirNuscens)(args, nuscenes, scenes) for scenes in nuscenes.scene)
         
