@@ -13,7 +13,9 @@ def addParser():
                                      --dst, -d : Destination directory where the generated dataset sits \n \
                                      --calibDir, -k : Path to the main directly where calibration files live\n \
                                      --anglim, -a : Angle limit for the uncalibration (only for the calibration task)\n \
+                                     --angaxis, -aa: Select the angle axis on which the deAlignment needs to be added. Ex. to apply only on y axis enter (010), and for all axis (111)\n \
                                      --translim, -l: translation limit for the unclaibration (only for the calibration task)\n \
+                                     --traxis, -ta: Select the translation axis on which the deAlignment needs to be added. Ex. to apply only on y axis enter (010), and for all axis (111)\n \
                                      --clrinfo, -c: Use color information when generating the cylindrical projection (only for odometry task)\n \
                                      --rangeimg, -r: Generate range image as an additional channel\n \
                                      --normals, -n: Generate normals data for point clouds\n \
@@ -25,7 +27,9 @@ def addParser():
     parser.add_argument('-d','--dst', type= str, help='Add the path to the destination directory of the dataset', required=True)
     parser.add_argument('-k','--calibDir', type=str, help='Add the path to the calibration directory where all calibration files stay', required=False)
     parser.add_argument('-a','--anglim', help='Enter the angle value in degrees to unclaibrate the lidar', required=False)
+    parser.add_argument('-aa','--angaxis', help='Select the angle axis on which the deAlignment needs to be added', required=False)
     parser.add_argument('-l','--translim', help='Enter the translation value in meters to unclaibrate the lidar', required=False)
+    parser.add_argument('-ta','--traxis', help='Select the translation axis on which the deAlignment needs to be added.', required=False)
     parser.add_argument('-c','--clrinfo', help='Enter the translation value in meters to unclaibrate the lidar', required=False)
     parser.add_argument('-r','--rangeimg', help='Generate range image as an additional channel (True/False)', required=False)
     parser.add_argument('-n','--normals', help='Generate normals data for point cloud (True/False)', required=False)
@@ -33,6 +37,7 @@ def addParser():
     
     
     return(parser.parse_args())
+
 
 def processForOdom(args):
     # Process the data for odometry task
@@ -79,8 +84,12 @@ def main():
         print("calibration")
         if args.anglim == None:
             args.anglim = 20
+        if args.angaxis == None:
+           args.angaxis = "1,1,1" 
         if args.translim == None:
             args.translim = 0.1
+        if args.traxis == None:
+            args.traxis = "1,1,1"
         if args.rangeimg == None:
             args.rangeimg = True
         if args.normals == None:

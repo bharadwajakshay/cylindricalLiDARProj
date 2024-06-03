@@ -5,13 +5,13 @@ from kittiReader import readOdomProjectionMat, readOdomTR, readvelodynepointclou
 from calibProjection import applyTransformation
 from genRangeImg import range_projection
 import open3d as o3d
-from calibProjection import getSynthesisedTransform
+from calibProjection import getSynthesisedTransform, renderLiDARImageOverLap
 from tqdm import tqdm
 
 _debug = False
 _dispAlignedImg = True
 
-def createDataFromEachDir(args, src, dir):
+def createDataFromEachDir(args, src, dir, angleAxis, trAxis):
     filepaths = []
     
     files = os.listdir(os.path.join(src, dir,'velodyne'))
@@ -26,7 +26,7 @@ def createDataFromEachDir(args, src, dir):
     
     for i in tqdm(range(0, len(files))):
         dataEntry = {}
-        
+        '''
         dstFolder = os.path.join('_'.join([args.dst, str(args.anglim), str(args.translim)]), dir, 'projectedData')
         dstFolderGT = os.path.join('_'.join([args.dst, str(args.anglim), str(args.translim)]), dir, 'projectedDataGT')
         
@@ -35,18 +35,20 @@ def createDataFromEachDir(args, src, dir):
             
         if not os.path.exists(dstFolderGT):
             os.makedirs(dstFolderGT)
-        
+        '''
+
         filenameIdx = files[i].split('.')[0]
         sequenceNo = dir
         files[i] = os.path.join(src, dir, 'velodyne', files[i])
         leftImgPth = os.path.join(src,sequenceNo,'image_2','.'.join([filenameIdx,'png']))
         rghtImgPth = os.path.join(src,sequenceNo,'image_3','.'.join([filenameIdx,'png']))
-        ptCld, intensity = readvelodynepointcloud(files[i])
+        
+        #ptCld, intensity = readvelodynepointcloud(files[i])
         
         
         
         ############################################ Ground Truth DATA #############################################################
-        
+        '''
         [rangeImg, projVertexGT, projIntensityGT, projIdxGT] = range_projection(np.hstack([ptCld,np.expand_dims(intensity,1)]))
         
         correctedPtCld = applyTransformation(projVertexGT[:,:,:3], projMatTr)
@@ -104,15 +106,20 @@ def createDataFromEachDir(args, src, dir):
         # Now write the projected file 
         dstFileNameGT = os.path.join(dstFolderGT, '.'.join([filenameIdx,'bin']))
         projectedImgGT.tofile(dstFileNameGT)
+        '''
                     
         
         ####################################################### Training DATA ########################################################
+        '''
         # create a placeholder for the generated data
         projectedImg = np.zeros(shape=[64,900,3],dtype=float)
+        '''
         # generate random transform 
-        randomTransform = getSynthesisedTransform(np.deg2rad(float(args.anglim)),float(args.translim))
-        distortedPoints = applyTransformation(correctedPtCld, randomTransform)
+        randomTransform = getSynthesisedTransform(np.deg2rad(float(args.anglim)),
+                                                  float(args.translim), angleAxis, trAxis)
         
+        '''
+        distortedPoints = applyTransformation(correctedPtCld, randomTransform)
 
         # get Normals
         pcd = o3d.geometry.PointCloud()
@@ -131,7 +138,7 @@ def createDataFromEachDir(args, src, dir):
         if args.rangeimg:
             rangeImg = np.linalg.norm(projectedImg[:,:,:3], 2, axis=2)
             projectedImg = np.concatenate((projectedImg,np.expand_dims(rangeImg,axis=2)),axis=2)
-        
+
         if _debug:
             calculatedRangedist = np.linalg.norm(projectedImg[:,:,:3], 2, axis=2)
             calculatedRangedist = calculatedRangedist *(255/calculatedRangedist.max())
@@ -144,17 +151,39 @@ def createDataFromEachDir(args, src, dir):
         
         # Now write the projected file 
         dstFileName = os.path.join(dstFolder, '.'.join([filenameIdx,'bin']))
-        projectedImg.tofile(dstFileName)
+        projectedImg.tofile(dstFileName)    
+
+        '''    
         
+        if _dispAlignedImg:
+            # Check the overlap of data on the image for sanity
+            print("Breakpoint")
+            
+            points = readvelodynepointcloud(files[i])
+            leftimg = Image.open(leftImgPth)
+            rightimg = Image.open(rghtImgPth)
+            
+            renderLiDARImageOverLap(points=points[0].transpose(), image=np.asarray(leftimg), transformation= projMatTr,P=projMatLeftImg,
+                                    R=np.eye(4),filename= "Testoverlap(left).png")
+            
+            renderLiDARImageOverLap(points=points[0].transpose(), image=np.asarray(rightimg), transformation= projMatTr,P=projMatRighImg,
+                                    R=np.eye(4),filename= "Testoverlap(rght).png")
+            
         
         
         ################################################### Add data #################################################################
+        dataEntry['dataset'] = 'kitti'
         dataEntry['leftImageFP'] = leftImgPth
         dataEntry['rightImageFP'] = rghtImgPth
+
+        '''
         dataEntry['LiDARImgShape'] = projectedImg.shape
         dataEntry['deCalibDataFP'] = dstFileName
         dataEntry['groundTruthDataFP'] = dstFileNameGT
-        dataEntry['transformationMat'] = randomTransform.tolist()
+        '''
+        dataEntry['pointCldFP'] = files[i]
+        dataEntry['alignTransMat'] = projMatTr.tolist()
+        dataEntry['deAlignTransMat'] = randomTransform.tolist()
         dataEntry['leftProjMat'] = projMatLeftImg.tolist()
         dataEntry['rightProjMat'] = projMatRighImg.tolist()
         filepaths.append(dataEntry)
